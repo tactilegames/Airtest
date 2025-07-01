@@ -483,8 +483,7 @@ class LogToHtml(object):
         info['devices'] = self.devices
 
         if record_list:
-            records = [os.path.join(DEFAULT_LOG_DIR, f) if self.export_dir
-                       else os.path.abspath(os.path.join(self.log_root, f)) for f in record_list]
+            records = [os.path.abspath(os.path.join(self.log_root, f)) for f in record_list]
         else:
             records = []
 
