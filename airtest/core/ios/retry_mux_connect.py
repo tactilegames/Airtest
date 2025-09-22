@@ -11,8 +11,11 @@ def retry_mux_connect(func):
     """
 
     @functools.wraps(func)
-    def wrapper(max_retries=15, delay_inbetween=2, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         last_exception = None
+        max_retries = 15
+        delay_inbetween = 2
+
         for _ in range(max_retries):
             try:
                 return func(*args, **kwargs)
