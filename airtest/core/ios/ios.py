@@ -25,6 +25,7 @@ from airtest import aircv
 from airtest.core.device import Device
 from airtest.core.ios.constant import CAP_METHOD, TOUCH_METHOD, IME_METHOD, ROTATION_MODE, KEY_EVENTS, \
     LANDSCAPE_PAD_RESOLUTION, IP_PATTERN
+from airtest.core.ios.retry_mux_connect import retry_mux_connect
 from airtest.core.ios.rotation import XYTransformer, RotationWatcher
 from airtest.core.ios.instruct_cmd import InstructHelper
 from airtest.utils.logger import get_logger
@@ -236,6 +237,7 @@ class TIDevice:
         BaseDevice(udid, Usbmux()).app_uninstall(bundle_id=bundle_id)
 
     @staticmethod
+    @retry_mux_connect
     def start_app(udid, bundle_id):
         BaseDevice(udid, Usbmux()).app_start(bundle_id=bundle_id)
 
