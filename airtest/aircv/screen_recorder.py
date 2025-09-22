@@ -46,7 +46,7 @@ class FfmpegVidWriter:
     """
     Generate a video using FFMPEG.
     """
-    def __init__(self, outfile, width, height, fps=10, orientation=0, timetag=True):
+    def __init__(self, outfile, width, height, fps=10, orientation=0, timetag=False):
         self.fps = fps
 
         # 三种横竖屏录屏模式 1 竖屏 2 横屏 0 方形居中
