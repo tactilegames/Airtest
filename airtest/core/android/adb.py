@@ -630,11 +630,13 @@ class ADB(object):
             result = subprocess.run(command, capture_output=True, text=True)
             return bool(result.stdout.strip())
     
+        if self._forward_local_using:
+            return self._forward_local_using[0]
 
         cond = False
         while not cond:
             random_port = random.randint(11111, 50000)
-            cond = random_port not in self._forward_local_using and not is_port_occupied(random_port)  
+            cond = not is_port_occupied(random_port)  
         return random_port
 
     @retries(3)
