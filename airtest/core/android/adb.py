@@ -631,7 +631,7 @@ class ADB(object):
             return bool(result.stdout.strip())
     
         if self._forward_local_using:
-            return self._forward_local_using[0]
+            return int(self._forward_local_using[0].split(":")[1])
 
         cond = False
         while not cond:
