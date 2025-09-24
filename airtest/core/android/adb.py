@@ -634,7 +634,8 @@ class ADB(object):
         cond = False
         while not cond:
             random_port = random.randint(11111, 50000)
-            cond = random_port not in self._forward_local_using and not is_port_occupied(random_port)  
+            using_local_ports = list(map(lambda x: x.split(":")[1], self._forward_local_using))
+            cond = random_port not in using_local_ports and not is_port_occupied(random_port)  
         return random_port
 
     @retries(3)
