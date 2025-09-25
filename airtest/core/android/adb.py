@@ -615,8 +615,7 @@ class ADB(object):
             serialno, local, remote = cols
             yield serialno, local, remote
 
-    @classmethod
-    def get_available_forward_local(cls):
+    def get_available_forward_local(self):
         """
         Generate a pseudo random number between 11111 and 50000 that will be used as local forward port
 
@@ -626,7 +625,18 @@ class ADB(object):
         Note:
             use `forward --no-rebind` to check if port is available
         """
-        return random.randint(11111, 50000)
+        def is_port_occupied(port):
+            command = ['lsof', '-i', f':{port}']
+            result = subprocess.run(command, capture_output=True, text=True)
+            return bool(result.stdout.strip())
+    
+
+        cond = False
+        while not cond:
+            random_port = random.randint(11111, 50000)
+            using_local_ports = list(map(lambda x: x.split(":")[1], self._forward_local_using))
+            cond = random_port not in using_local_ports and not is_port_occupied(random_port)  
+        return random_port
 
     @retries(3)
     def setup_forward(self, device_port, no_rebind=True):
