@@ -129,6 +129,15 @@ def log(arg, timestamp=None, desc="", snapshot=False):
             if hasattr(arg, "__traceback__"):
                 # in PY3, arg.__traceback__ is traceback object
                 trace_msg = ''.join(traceback.format_exception(type(arg), arg, arg.__traceback__))
+
+                if isinstance(arg, BrokenPipeError):
+                    # Use splitlines(True) to keep the original newline characters
+                    lines = trace_msg.splitlines(True) 
+                    if lines:
+                        # Prepend 'raise ' to the last line
+                        lines[-1] = f"raise {lines[-1]}"
+                    # Re-join the string
+                    trace_msg = "".join(lines)
             else:
                 trace_msg = arg.message  # PY2
             G.LOGGER.log("info", {
