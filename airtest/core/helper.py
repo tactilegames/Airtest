@@ -135,7 +135,7 @@ def log(arg, timestamp=None, desc="", snapshot=False):
                     lines = trace_msg.splitlines(True) 
                     if lines:
                         # Prepend 'raise ' to the last line
-                        lines[-1] = f"raise {lines[-1]}"
+                        lines[-1] = f" raise {lines[-1]}"
                     # Re-join the string
                     trace_msg = "".join(lines)
             else:
