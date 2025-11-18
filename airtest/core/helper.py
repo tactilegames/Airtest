@@ -129,6 +129,8 @@ def log(arg, timestamp=None, desc="", snapshot=False):
             if hasattr(arg, "__traceback__"):
                 # in PY3, arg.__traceback__ is traceback object
                 trace_msg = ''.join(traceback.format_exception(type(arg), arg, arg.__traceback__))
+
+                trace_msg = trace_msg.replace("BrokenPipeError", "TestErrorCodeException")
             else:
                 trace_msg = arg.message  # PY2
             G.LOGGER.log("info", {
