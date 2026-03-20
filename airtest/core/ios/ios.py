@@ -51,7 +51,7 @@ def decorator_retry_session(func):
     def wrapper(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
-        except (RuntimeError, wda.WDAError):
+        except (RuntimeError, wda.WDAError, wda.usbmux.exceptions.HTTPError):
             for i in range(3):
                 try:
                     self._fetch_new_session()
