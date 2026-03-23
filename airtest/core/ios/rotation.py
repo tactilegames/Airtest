@@ -96,7 +96,7 @@ class RotationWatcher(object):
 
         self.roundProcess = threading.Thread(
             target=_run, name="rotationwatcher")
-        # self._t.daemon = True
+        self.roundProcess.daemon = True
         self.roundProcess.start()
 
     def reg_callback(self, ow_callback):
