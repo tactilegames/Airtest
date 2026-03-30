@@ -648,7 +648,7 @@ class IOS(Device):
                 self.udid = udid
             else:
                 self.udid = parsed
-            self.driver = wda.USBClient(udid=self.udid, port=8100, wda_bundle_id=self.wda_bundle_id)
+            self.driver = wda.USBClient(udid=self.udid, port=8100)
         # Record device's width and height.
         self._size = {'width': None, 'height': None}
         self._current_orientation = None
