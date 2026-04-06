@@ -4,6 +4,7 @@
 import os
 import re
 import sys
+import threading
 
 import requests.exceptions
 import wda
@@ -39,27 +40,62 @@ LOGGING = get_logger(__name__)
 DEFAULT_ADDR = "http://localhost:8100/"
 
 
+_RETRY_SESSION_TIMEOUT = 120  # seconds: hard wall-clock limit for decorator_retry_session
+
+
 def decorator_retry_session(func):
     """
     When the operation fails due to session failure, try to re-acquire the session,
     retry at most 3 times.
+
+    A hard wall-clock timeout of _RETRY_SESSION_TIMEOUT seconds is enforced via a
+    daemon thread so that wda's internal infinite-recursion retry loop (which fires
+    when WDA is unresponsive and can block for hours at HTTP_TIMEOUT=180s per level)
+    cannot stall the test indefinitely.
 
     当因为session失效而操作失败时，尝试重新获取session，最多重试3次。
     """
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        try:
-            return func(self, *args, **kwargs)
-        except (RuntimeError, wda.WDAError, wda.usbmux.exceptions.HTTPError):
-            for i in range(3):
+        result_box = [None]   # [value] on success
+        error_box = [None]    # [exception] on failure
+        done = threading.Event()
+
+        def _attempt():
+            try:
                 try:
-                    self._fetch_new_session()
-                    return func(self, *args, **kwargs)
-                except:
-                    time.sleep(0.5)
-                    continue
-            raise AirtestError("Failed to re-acquire session.")
+                    result_box[0] = func(self, *args, **kwargs)
+                    return
+                except (RuntimeError, wda.WDAError, wda.usbmux.exceptions.HTTPError):
+                    pass
+                if not self.driver.is_ready():
+                    error_box[0] = AirtestError("Failed to re-acquire session: WDA is not reachable.")
+                    return
+                for i in range(3):
+                    try:
+                        self._fetch_new_session()
+                        result_box[0] = func(self, *args, **kwargs)
+                        return
+                    except Exception:
+                        time.sleep(0.5)
+                error_box[0] = AirtestError("Failed to re-acquire session.")
+            except Exception as e:
+                error_box[0] = e
+            finally:
+                done.set()
+
+        t = threading.Thread(target=_attempt, daemon=True)
+        t.start()
+
+        if not done.wait(timeout=_RETRY_SESSION_TIMEOUT):
+            raise AirtestError(
+                "Failed to re-acquire session: timed out after {}s.".format(_RETRY_SESSION_TIMEOUT)
+            )
+
+        if error_box[0] is not None:
+            raise error_box[0]
+        return result_box[0]
 
     return wrapper
 
