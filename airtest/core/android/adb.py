@@ -626,10 +626,15 @@ class ADB(object):
             use `forward --no-rebind` to check if port is available
         """
         def is_port_occupied(port):
-            command = ['lsof', '-i', f':{port}']
-            result = subprocess.run(command, capture_output=True, text=True)
-            return bool(result.stdout.strip())
-    
+            import platform
+            if platform.system() == 'Windows':
+                command = ['netstat', '-ano']
+                result = subprocess.run(command, capture_output=True, text=True)
+                return f':{port} ' in result.stdout or f':{port}\t' in result.stdout
+            else:
+                command = ['lsof', '-i', f':{port}']
+                result = subprocess.run(command, capture_output=True, text=True)
+                return bool(result.stdout.strip())    
 
         cond = False
         while not cond:
