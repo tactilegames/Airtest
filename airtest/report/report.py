@@ -34,6 +34,11 @@ DEFAULT_LOG_DIR = "log"
 DEFAULT_LOG_FILE = "log.txt"
 HTML_TPL = "log_template.html"
 HTML_FILE = "log.html"
+# The stock template writes step text into the page as HTML, so `<` and `>` in the run data are
+# swapped for `{` and `}` on the way in. A template that escapes its own text can set this to True
+# and get them as JSON escapes instead, which read back as the real characters: a Poco path keeps its
+# `A>B`, and `a < b` in a check stays `a < b`.
+ESCAPE_ANGLE_BRACKETS = False
 STATIC_DIR = os.path.dirname(__file__)
 
 _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
@@ -535,8 +540,13 @@ class LogToHtml(object):
         data['info'] = info
         data['log'] = self.get_relative_log(output_file)
         data['console'] = self.get_console(output_file)
-        # 如果带有<>符号，容易被highlight.js认为是特殊语法，有可能导致页面显示异常，尝试替换成不常用的{}
-        info = json.dumps(data).replace("<", "{").replace(">", "}")
+        info = json.dumps(data)
+        if ESCAPE_ANGLE_BRACKETS:
+            # still never a literal `<` in the page, so no `</script>` can end the block early
+            info = info.replace("<", "\\u003c").replace(">", "\\u003e")
+        else:
+            # 如果带有<>符号，容易被highlight.js认为是特殊语法，有可能导致页面显示异常，尝试替换成不常用的{}
+            info = info.replace("<", "{").replace(">", "}")
         data['data'] = info
         return data
 
