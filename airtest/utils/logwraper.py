@@ -92,6 +92,10 @@ class AirtestLogger(object):
             self.running_stack.pop()
 
 
+# Callers check this before passing log_extra: an Airtest without it rejects the keyword.
+SUPPORTS_LOG_EXTRA = True
+
+
 def Logwrap(f, logger):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -104,6 +108,8 @@ def Logwrap(f, logger):
 
         snapshot: snapshot: If True, a snapshot can be attached to the report. 如果为True，可以附加一张截图到报告中
         depth: the depth order of the current log in the log. 指定log中当前log的深度顺序
+        log_extra: a dict of extra facts saved with this call, next to its arguments, so the report
+            can show them (for example where a check's values came from). Not passed to the function.
 
         Examples:
 
@@ -126,6 +132,7 @@ def Logwrap(f, logger):
         from airtest.core.cv import try_log_screen
         # py3 only: def wrapper(*args, depth=None, **kwargs):
         depth = kwargs.pop('depth', None)  # For compatibility with py2
+        log_extra = kwargs.pop('log_extra', None)
         start = time.time()
         m = inspect.getcallargs(f, *args, **kwargs)
         # The snapshot parameter is popped from the function parameter,
@@ -133,6 +140,8 @@ def Logwrap(f, logger):
         snapshot = m.pop('snapshot', False)
         m.pop('self', None)  # remove self from the call_args
         m.pop('cls', None)  # remove cls from the call_args
+        if log_extra:
+            m.update(log_extra)
         fndata = {'name': f.__name__, 'call_args': m, 'start_time': start}
         logger.running_stack.append(fndata)
         try:
